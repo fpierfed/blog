@@ -22,16 +22,17 @@ The simplest "benchmark" I could think of is just setting and getting a key in a
 
 Using the de-facto standard [Python Redis Client](https://github.com/andymccurdy/redis-py), one could simply write something along these lines:
 
-    #!python3
-    def test_sync(n, host, port):
-        r = redis.StrictRedis(host, port, decode_responses=True)
-        for i in range(n):
-            key = f'test_sync:keys:{i}'
-            value = f'{i}'
+```python3
+def test_sync(n, host, port):
+    r = redis.StrictRedis(host, port, decode_responses=True)
+    for i in range(n):
+        key = f'test_sync:keys:{i}'
+        value = f'{i}'
     
-            r.set(key, value)
-            fetched = r.get(key)
-            assert value == fetched
+        r.set(key, value)
+        fetched = r.get(key)
+        assert value == fetched
+```
 
 The code should be self explanatory: we open a connection to a Redis server (listening on ```host:port```) and ask the connection object to take care of any decoding between bytes and strings for us (line 2).
 
@@ -39,18 +40,19 @@ Once that is done, we simply loop n-times (line 3) setting a key (line 7) and ge
 
 For this simple example, pipelining ```get``` and ```set``` operations would definitely help: the change is simple enough (lines 8-11):
 
-    #!python3
-    def test_sync_pipe(n, host, port):
-        r = redis.StrictRedis(host, port, decode_responses=True)
-        for i in range(n):
-            key = f'test_sync_pipe:keys:{i}'
-            value = f'{i}'
+```python3
+def test_sync_pipe(n, host, port):
+    r = redis.StrictRedis(host, port, decode_responses=True)
+    for i in range(n):
+        key = f'test_sync_pipe:keys:{i}'
+        value = f'{i}'
     
-            pipe = r.pipeline()
-            pipe.set(key, value)
-            pipe.get(key)
-            _, fetched = pipe.execute()
-            assert value == fetched
+        pipe = r.pipeline()
+        pipe.set(key, value)
+        pipe.get(key)
+        _, fetched = pipe.execute()
+        assert value == fetched
+```
 
 How fast can these two functions run using a local Redis server? Out of five repetitions, the number of get+set operations per seconds are given in the following table:
 
@@ -69,28 +71,30 @@ How would asyncio fare with this type of code? Would it be faster? Slower? Since
 
 The first attempt:
 
-    #!python3
-    import aioredis
+```python3
+import aioredis
     
-    async def test_async(n, host, port, cid, loop):
-        r = await aioredis.create_redis((host, port), loop=loop)
-        for i in range(n):
-            key = f'test_async:keys:{cid}:{i}'
-            value = f'{i}'
+async def test_async(n, host, port, cid, loop):
+    r = await aioredis.create_redis((host, port), loop=loop)
+    for i in range(n):
+        key = f'test_async:keys:{cid}:{i}'
+        value = f'{i}'
     
-            await r.set(key, value)
-            fetched = await r.get(key)
-            assert fetched.decode('utf-8') == value
-        r.close()
-        await r.wait_closed()
+        await r.set(key, value)
+        fetched = await r.get(key)
+        assert fetched.decode('utf-8') == value
+    r.close()
+    await r.wait_closed()
+```
 
 Tu run the function above, we need an event loop, of course:
 
-    #!python3
-    import asyncio
+```python3
+import asyncio
     
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(test_async(n, host, port, i, loop))
+loop = asyncio.get_event_loop()
+loop.run_until_complete(test_async(n, host, port, i, loop))
+```
 
 Results (again five repetitions):
 
@@ -102,20 +106,21 @@ The result is not (that) surprising: the asynchronous code is doing a lot more t
 
 We need a helper function to do the splitting:
 
-    #!python3
-    def async_runner(n, host, port, nworkers=100):
-        def closest_divistor(n, d):
-            while n % d:
-                d += 1
-            return d
+```python3
+def async_runner(n, host, port, nworkers=100):
+    def closest_divistor(n, d):
+        while n % d:
+            d += 1
+        return d
     
-        nw = closest_divistor(n, nworkers)
-        loop = asyncio.get_event_loop()
-        
-        tasks = [asyncio.ensure_future(
-                    test_async(n // nw, host, port, i, loop))
-                 for i in range(nw)]
-        loop.run_until_complete(asyncio.wait(tasks))
+    nw = closest_divistor(n, nworkers)
+    loop = asyncio.get_event_loop()
+    
+    tasks = [asyncio.ensure_future(
+                test_async(n // nw, host, port, i, loop))
+             for i in range(nw)]
+    loop.run_until_complete(asyncio.wait(tasks))
+```
 
 Here we split the number ```n``` of operations to perform into ```nw``` chunks (line 12). We just want to make sure that ```nw``` is a divisor of ```n``` to avoid having to deal with reminders (see function on lines 3-6 and line 8).
 
@@ -142,21 +147,22 @@ There is an exciting player in asyncio land: [uvloop](https://github.com/MagicSt
 
 Code changes are minimal and restricted to our ```async_runner``` helper function:
 
-    #!python3
-    def async_runner_uvloop(n, host, port, nworkers=100):
-        def closest_divistor(n, d):
-            while n % d:
-                d += 1
-            return d
+```python3
+def async_runner_uvloop(n, host, port, nworkers=100):
+    def closest_divistor(n, d):
+        while n % d:
+            d += 1
+        return d
     
-        nw = closest_divistor(n, nworkers)
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        loop = asyncio.get_event_loop()
-        
-        tasks = [asyncio.ensure_future(
-                    test_async(n // nw, host, port, i, loop))
-                 for i in range(nw)]
-        loop.run_until_complete(asyncio.wait(tasks))
+    nw = closest_divistor(n, nworkers)
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    loop = asyncio.get_event_loop()
+    
+    tasks = [asyncio.ensure_future(
+                test_async(n // nw, host, port, i, loop))
+             for i in range(nw)]
+    loop.run_until_complete(asyncio.wait(tasks))
+```
 
 Indeed: just one extra statement: line 9 is where we install uvloop's event loop.
 
@@ -173,20 +179,21 @@ Almost twice as fast as our non-pipelined sequential code!
 
 One interesting aspect of the asyncio-based code is that it does not use Redis pipelines to avoid the round-trip between a set and corresponding a get operation. The ```aioredis``` package does support pipelines and my tests with them did not produce any faster code. Quite the opposite, actually: the code run significantly slower. I guess the reason is that pipelining helps with a small number of coroutines since one is already spending as much time as possible in the server and there is not as much dead time to fill with other requests. A simple test:
 
-    #!python3
-    async def test_async_pipe(n, host, port, cid, loop):
-        r = await aioredis.create_redis((host, port), loop=loop)
-        for i in range(n):
-            key = f'test_async:keys:{cid}:{i}'
-            value = f'{i}'
+```python3
+async def test_async_pipe(n, host, port, cid, loop):
+    r = await aioredis.create_redis((host, port), loop=loop)
+    for i in range(n):
+        key = f'test_async:keys:{cid}:{i}'
+        value = f'{i}'
     
-            pipe = r.pipeline()
-            pipe.set(key, value)
-            pipe.get(key)
-            _, fetched = await pipe.execute()
-            assert fetched.decode('utf-8') == value
-        r.close()
-        await r.wait_closed()
+        pipe = r.pipeline()
+        pipe.set(key, value)
+        pipe.get(key)
+        _, fetched = await pipe.execute()
+        assert fetched.decode('utf-8') == value
+    r.close()
+    await r.wait_closed()
+```
 
 Changing the value of ```nw``` from 1 to 200 shows performance increase with ```nw```, reach a maximum of just over 10k operation/s (with ```uvloop```!) at ```nw=100``` and then get progressively worse with increasing values of ```nw```.
 
