@@ -199,5 +199,5 @@ In the next instalment, we will look at performing these tests across the networ
 
 ## Resources
 
-All code available in this [git repo](https://github.com/fpierfed/blog-code). The blog itself is available in this other [git repo](
+All code available in this [git repo](https://github.com/fpierfed/blog-code). The blog itself is available in this other [git repo](https://github.com/fpierfed/blog).
 
