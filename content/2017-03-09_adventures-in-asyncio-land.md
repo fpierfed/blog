@@ -11,7 +11,7 @@ I have been interested in distributed task queues and, more in general, in distr
 
 If you have played with [Celery](http://www.celeryproject.org) for instance, you might have used Redis as a broker and/or result backend. [Python RQ](http://python-rq.org), another distributed task queue project, relies exclusively on Redis to both store work requests as well as results.
 
-In my curiosity, I wanted to look at Redis performance and suitability as a low-latency message broker. I will be using Redis 3.2.8 and Python 3.6 on MacOS Sierra (bare metal), Debian 8.2 (virtualised) and FreeBSD 11.0 (virtualised). 
+In my curiosity, I wanted to look at Redis performance and suitability as a low-latency message broker. I will be using Redis 3.2.8 and Python 3.6 on MacOS Sierra (bare metal) and Debian 8.2 (virtualised). 
 
 As I will be using a wide range of CPUs, physical virtual machines, the point of this article is to look at relative performance gains/losses when accessing Redis in different ways.
 
@@ -54,10 +54,10 @@ For this simple example, pipelining ```get``` and ```set``` operations would def
 
 How fast can these two functions run using a local Redis server? Out of five repetitions, the number of get+set operations per seconds are given in the following table:
 
-Function Name        | Best      | Worst      | Stdev
--------------------- | --------- | ---------- | ------
-test_sync            | 8655.07   | 8565.18    | 35.91
-test_sync_pipe       | 9670.29   | 9171.65    | 217.31
+Function Name         | Best      | Worst      | Stdev
+--------------------- | --------- | ---------- | ------
+test_sync             | 8655.07   | 8565.18    | 35.91
+test_sync\_pipe       | 9670.29   | 9171.65    | 217.31
 
 Well, not bad at all: almost nine thousand get/set operations per second! Pipelining the get and set brings us to almost 10k operation/s (with a local Redis, it should be stressed).
 
@@ -192,7 +192,19 @@ Changing the value of ```nw``` from 1 to 200 shows performance increase with ```
 
 All tests were run on my MacBook Pro with 16 GB of RAM, the stock SSD and Intel i7-4870HQ CPU @ 2.50GHz CPU. Running the same tests on a 2010 Mac Pro with 32 GB RAM (the slow kind at 1066 MHz) a slow-ish SSD and upgraded 2x 6-core Intel Xeon X5650  @ 2.67GHz produced results that were approximately 48-50% slower.
 
-The same thing on a Debian 8.2 KVM virtual machine running on two physical cores of a Dell PowerEdge 730 with two nice 8-core Xeon E5-2620 v4 @ 2.10GHz showed results consistently above 10k operation/s for all tests. The fasts was again ```test_async  (nw=100, uvloop)``` at 18648 get+set/s. Which is probably just as fast as Redis would go (which is pretty darn fast!).
+The same thing on a Debian 8.2 KVM virtual machine running on two physical cores of a Dell PowerEdge 730 with two nice 8-core Xeon E5-2620 v4 @ 2.10GHz showed results consistently above 10k operation/s for all tests. The fasts was again ```test_async  (nw=100, uvloop)``` at 18648 get+set/s. Which maybe is just as fast as Redis would go (which is pretty darn fast!).
+
+For convenience, here are all numbers in a single table:
+
+Function Name               | Best      | Worst      | Stdev
+--------------------------- | --------- | ---------- | ------
+test_sync                   | 8655.07   | 8565.18    | 35.91
+test_sync\_pipe             | 9670.29   | 9171.65    | 217.31
+test_async                  | 5392.60   | 5352.36    | 14.73
+test_async (nw=100)         | 10770.29  | 10085.96   | 283.71
+test_async (nw=100, uvloop) | 17853.57  | 16403.31   | 568.29
+
+Remember: all numbers are the results of five repetitions on the same hardware (MacBook Pro) and with the same software stacks.
 
 In the next instalment, we will look at performing these tests across the network!
 
