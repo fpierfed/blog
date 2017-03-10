@@ -34,11 +34,15 @@ CC_LICENSE = {
 }
 
 # Blogroll
-LINKS = (('Checkout my book!', 'https://distributedcomputingwithpython.com/'),)
+# LINKS = ((),)
 
 # Social widget
-SOCIAL = (('You can add links in your config file', '#'),
-          ('Another social link', '#'),)
+SOCIAL = (('linkedin',
+           'https://www.linkedin.com/in/francesco-pierfederici-babbb71/'),
+          ('github', 'https://github.com/fpierfed'),
+          # ('google', 'https://google.com/+AlexandreVicenzi'),
+          # ('twitter', 'https://twitter.com/alxvicenzi'),
+          ('rss', '/blog/feeds/all.atom.xml'))
 
 DEFAULT_PAGINATION = 10
 SUMMARY_MAX_LENGTH = 0
@@ -56,7 +60,7 @@ PLUGINS = ['assets', 'gzip_cache']
 # Theme-specific
 PYGMENTS_STYLE = 'monokai'
 MAIN_MENU = True
-MENUITEMS = (('Home', '/'),
+MENUITEMS = (('The Book', '/'),
              ('Archives', 'archives.html'),
-             ('Categories','categories.html'),
+             ('Categories', 'categories.html'),
              ('Tags', 'tags.html'))
