@@ -208,7 +208,7 @@ async def test_async_pipe(n, host, port, cid, loop):
 
 Changing the value of ```nw``` from 1 to 200 shows performance increasing with ```nw```, reach a maximum at around ```nw=100``` and then falling.
 
-Removing the asserts from all test functions improves performance by roughly two-percent.
+Removing the ```assert```s from all test functions improves performance by roughly two-percent. The other thing is that the standard deviations quoted in the tables above should be taken with more than just a grain of salt. These are computed over five repetitions and are nothing more than a vague indication of the type of variability we can expect. We should not be reading more into them.
 
 All tests were run on my 15" MacBook Pro with 16 GB of RAM, the stock SSD and a 4-core Intel i7-4870HQ @ 2.50GHz. Running the same tests on a 2010 Mac Pro with 32 GB RAM (the slow kind at 1066 MHz), a slow-ish SSD and two 6-core Intel Xeons X5650 @ 2.67GHz produced results that were approximately 48-50% slower.
 
