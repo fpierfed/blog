@@ -5,4 +5,4 @@ This is the code for [my blog](https://pythoncomputing.com/blog/). Feel free to 
 
 Oh, and the code is [here](https://github.com/fpierfed/blog-code). Same thing: if you find an error, please help me correct it. Thanks!
 
-The blog license is CC ShareAlike 4.0 or later while for the code the license is GPL.
+The blog license is CC ShareAlike 4.0 or later while for the code the license is GPL 3.0 or later.
