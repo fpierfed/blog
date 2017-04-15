@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import os
 
 
-AUTHOR = 'Francesco'
+AUTHOR = 'Francesco Pierfederici'
 SITENAME = 'Python Computing'
 SITETITLE = 'Python Computing'
 SITESUBTITLE = 'Distributed Computing for the Rest of Us'
