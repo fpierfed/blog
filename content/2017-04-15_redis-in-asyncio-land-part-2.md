@@ -1,5 +1,5 @@
 Title: Redis in Asyncio Land Part 2
-Date: 2017-04-16
+Date: 2017-04-15
 Tags: Python, Redis, asyncio, uvloop
 Slug: redis-in-asyncio-land-part-2
 Category: Performance
